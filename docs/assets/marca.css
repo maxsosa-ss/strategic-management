@@ -1,0 +1,47 @@
+/* Marca: Roboto para títulos, Inter para párrafos (cargado por el tema). Solo la paleta oficial. */
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@500;700&display=swap");
+
+:root,
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #278976;
+  --md-primary-fg-color--light: #42e2c6;
+  --md-primary-fg-color--dark: #278976;
+  --md-primary-bg-color: #ffffff;
+  --md-accent-fg-color: #278976;          /* #42E2C6 no tiene contraste para texto sobre fondo claro */
+  --md-default-bg-color: #f1f3f3;
+  --md-default-fg-color: #434343;
+  --md-default-fg-color--light: #434343;
+  --md-typeset-color: #434343;
+  --md-typeset-a-color: #278976;
+  --md-code-bg-color: #f9fafa;
+  --md-code-fg-color: #434343;
+  --md-footer-bg-color: #278976;
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4 {
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+  font-weight: 700;
+  color: #278976;
+  letter-spacing: 0;
+}
+
+.md-typeset h1 { font-weight: 700; margin-bottom: 1rem; }
+.md-typeset { max-width: 46rem; }                /* líneas de menos de 80 caracteres */
+.md-typeset code { font-size: 0.85em; }
+.md-typeset table:not([class]) { background: #f9fafa; border: 0; box-shadow: none; }
+.md-typeset table:not([class]) th { background: #278976; color: #ffffff; font-weight: 600; }
+.md-typeset img { max-width: 100%; height: auto; }
+
+/* Tablas de referencia: la tabla de variables no se parte en pantallas chicas */
+.md-typeset__scrollwrap { overflow-x: auto; }
+
+/* Foco visible con teclado */
+.md-typeset a:focus-visible,
+.md-nav__link:focus-visible,
+.md-search__input:focus-visible {
+  outline: 2px solid #278976;
+  outline-offset: 2px;
+}

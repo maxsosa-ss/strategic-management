@@ -1,0 +1,9 @@
+.env
+token.json
+*credentials*.json
+*service_account*.json
+client_secret*.json
+__pycache__/
+*.egg-info/
+.venv/
+site/
