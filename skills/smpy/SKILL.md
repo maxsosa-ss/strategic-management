@@ -17,7 +17,7 @@ Siempre desde GitHub, dentro del entorno virtual del proyecto:
 
 Para fijar una versión, agregar `@vX.Y.Z` (una etiqueta existente) al final de la URL. Si el repositorio es privado, git debe estar autenticado.
 
-Paquetes: `smpy.connectors` (mstr, google, pipeline) y `smpy.transforms` (conversión y limpieza de datos sin conexiones; por ahora vacío).
+Paquetes: `smpy.connectors` (mstr, google, pipeline) y `smpy.transforms` (conversión y limpieza de datos sin conexiones; por ahora `filters.filter_values`).
 
 Copiar `.env.example` a `.env` y completar. Nunca commitear `.env` ni JSON de credenciales.
 
@@ -66,6 +66,11 @@ Con más control, DataFrame -> super cube (alimenta tableros). `policy` = `repla
 - Los `OlapCube` se actualizan con `refresh()`/`publish()` (asíncrono, devuelve un `Job`); los super cube solo se pueden publicar una vez, después se usa `update`.
 - Si una hoja de Google Sheets tiene una "tabla" definida, `append_rows` de gspread pisa filas porque la tabla no crece. `df_to_sheet` ya lo evita calculando la próxima fila.
 - El `.env` se busca desde la carpeta de trabajo hacia arriba (cada proyecto usa el suyo). Las rutas relativas del `.env` (por ejemplo `credentials.json`) también se resuelven desde la carpeta de trabajo: ejecutar desde la raíz del proyecto o usar rutas absolutas.
+
+- Reportes con prompts: `report_prompts` los lista; se responden por nombre con `report_to_df(prompts={...})`. Verificado solo para tipo `VALUE` (acepta número o texto). El flag `required` no es confiable (el servidor exige responder un prompt marcado como no obligatorio). Valor inválido da `IServerError`; un período sin datos devuelve 0 filas sin error.
+- El único filtro del lado del servidor es el prompt (`prompts=`). `filters`/`exclude` de `report_to_df` filtran siempre en pandas, después de descargar, y validan los nombres. Se descartó `Report.apply_filters` del SDK: se ignora en silencio en reportes con prompts (y falla en modo async), con atributos de varias formas (código y descripción) requiere IDs `idAtributo:código` que no se resuelven por nombre, `attr_elements` falla en reportes con prompts y se cuelga en reportes grandes (256 mil filas), y un elemento inexistente devuelve un DataFrame vacío sin error.
+- No reutilizar un objeto `Report` entre ejecuciones: con otro prompt falla (`ERR006`) y después de `clear_filters()` devolvió un DataFrame vacío. `report_to_df` crea uno nuevo cada vez.
+- Varios períodos: una conexión, una llamada por período y `pd.concat`. En paralelo (4 hilos, conexión compartida) dio los mismos resultados en 12 s contra 33 s secuenciales; usar 2 a 4 hilos.
 
 ## Reglas
 

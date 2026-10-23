@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "smpy"
-version = "0.2.0"
+version = "0.3.0"
 description = "Conexiones a MicroStrategy y Google, y herramientas de datos reutilizables (wrappers finos sobre los SDK oficiales)."
 requires-python = ">=3.10"
 dependencies = ["python-dotenv>=1.0", "pandas>=2.0"]

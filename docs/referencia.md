@@ -24,6 +24,8 @@ Requiere el extra `[google]`.
 
 ::: smpy.transforms
 
+::: smpy.transforms.filters
+
 ## Configuración
 
 ::: smpy.config

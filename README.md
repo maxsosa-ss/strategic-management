@@ -9,7 +9,7 @@ Cuando el SDK de MicroStrategy agrega algo nuevo, ya lo tenés: la conexión que
 | Paquete | Para qué sirve |
 |---|---|
 | `smpy.connectors` | Conexiones a MicroStrategy y Google, y los flujos que mueven DataFrames entre reportes, hojas y cubos |
-| `smpy.transforms` | Funciones de conversión y limpieza de datos que no dependen de ninguna conexión. Por ahora está vacío |
+| `smpy.transforms` | Funciones de conversión y limpieza de datos que no dependen de ninguna conexión. Por ahora: filtrado de DataFrames por valores de columnas |
 | `smpy.config` | Lectura de la configuración desde el `.env` y las variables de entorno |
 
 Cada función se importa desde el módulo donde está definida; `smpy` no reexporta nada. Así siempre se ve de dónde viene: `from smpy.connectors.google import get_sheets_client`, `from smpy.connectors.mstr import mstr_session`, `from smpy.connectors.pipeline import dataframe_to_supercube`.
@@ -33,7 +33,7 @@ Para comprobar que instalaste el correcto, ejecutá `pip show smpy`: tiene que f
 
 Si solo necesitás una parte, reemplazá `[all]` por `[mstr]` o `[google]`. Para actualizar a la última versión, agregá `--upgrade`.
 
-Para fijar una versión concreta, agregá una etiqueta al final de la URL, por ejemplo `...strategic-management.git@v0.2.0`. Las etiquetas disponibles están en la sección Releases del repositorio.
+Para fijar una versión concreta, agregá una etiqueta al final de la URL, por ejemplo `...strategic-management.git@v0.3.0`. Las etiquetas disponibles están en la sección Releases del repositorio.
 
 Si el repositorio es privado, git tiene que estar autenticado con tu cuenta de GitHub antes de instalar (por ejemplo con `gh auth login`, un token personal o una clave SSH).
 <!-- --8<-- [end:instalacion] -->
@@ -91,6 +91,19 @@ cube_id = dataframe_to_supercube(df, "Paises", cube_name="Paises", to_attribute=
 dataframe_to_supercube(df, "Paises", cube_id=cube_id, policy="upsert")
 ```
 
+Bajar un reporte con prompts y filtros (`report_prompts` te dice qué prompts tiene):
+
+```python
+from smpy.connectors.mstr import mstr_session, report_prompts, report_to_df
+
+with mstr_session() as conn:
+    print(report_prompts(conn, "ID_REPORTE"))
+    df = report_to_df(conn, "ID_REPORTE",
+                      prompts={"Valor de Periodo": 202609},          # lo filtra MicroStrategy
+                      filters={"Zona": ["AMBA", "CUYO"]},            # se filtra en pandas, con validación
+                      exclude={"Zona": "F/D"})
+```
+
 Usar el SDK de MicroStrategy directamente cuando la librería no tiene lo que necesitás:
 
 ```python
@@ -108,7 +121,8 @@ Hay más ejemplos listos para ejecutar en [examples/](examples/) y recetas expli
 | Quiero | Función | Módulo |
 |---|---|---|
 | Conectarme a MicroStrategy | `get_mstr_connection`, `mstr_session` | `smpy.connectors.mstr` |
-| Traer un reporte como DataFrame | `report_to_df` | `smpy.connectors.mstr` |
+| Traer un reporte como DataFrame, respondiendo sus prompts y filtrando | `report_to_df` | `smpy.connectors.mstr` |
+| Ver qué prompts tiene un reporte | `report_prompts` | `smpy.connectors.mstr` |
 | Crear un super cube desde un DataFrame | `create_supercube` | `smpy.connectors.mstr` |
 | Actualizar un super cube (`replace`, `add`, `update`, `upsert`) | `df_to_supercube` | `smpy.connectors.mstr` |
 | Obtener credenciales o clientes de Google | `get_google_credentials`, `get_sheets_client`, `get_google_service` | `smpy.connectors.google` |
@@ -117,6 +131,7 @@ Hay más ejemplos listos para ejecutar en [examples/](examples/) y recetas expli
 | Reporte a hoja, con transformación opcional | `report_to_sheet` | `smpy.connectors.pipeline` |
 | Hoja a super cube, con transformación opcional | `sheet_to_supercube` | `smpy.connectors.pipeline` |
 | DataFrame a super cube, creando o actualizando, en una sola llamada | `dataframe_to_supercube` | `smpy.connectors.pipeline` |
+| Filtrar un DataFrame por valores de columnas, con validación | `filter_values` | `smpy.transforms.filters` |
 
 Las tres rutas que más se usan quedan así: DataFrame a hoja con `df_to_sheet`, hoja a cubo con `sheet_to_supercube` y DataFrame a cubo con `dataframe_to_supercube`.
 

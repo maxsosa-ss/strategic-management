@@ -84,6 +84,66 @@ df = mi_transformacion(df)
 df_to_sheet(get_sheets_client(), "ID_SHEET", "Hoja 1", df, mode="replace")
 ```
 
+## Bajar un reporte con prompts y filtros
+
+Primero mirá qué prompts tiene el reporte y de qué tipo son:
+
+```python
+from smpy.connectors.mstr import mstr_session, report_prompts, report_to_df
+
+with mstr_session() as conn:
+    print(report_prompts(conn, "ID_REPORTE"))
+```
+
+Después respondelos por nombre con `prompts=`. Es el filtro dinámico del reporte y el más eficiente, porque lo aplica MicroStrategy antes de enviar los datos. Para filtrar además por los valores de un atributo, usá `filters` (dejar solo esos valores) y `exclude` (sacarlos):
+
+```python
+df = report_to_df(conn, "ID_REPORTE",
+                  prompts={"Valor de Periodo": 202609},
+                  filters={"Subzona Direccion Comercial Asociado": ["CABA", "GBA NORTE"]},
+                  exclude={"Zona Direccion Comercial Asociado": "F/D"})
+```
+
+`filters` y `exclude` usan el nombre de la columna del DataFrame y se aplican en pandas, después de descargar. Funcionan en cualquier reporte, admiten incluir y excluir a la vez, y validan los valores: si escribís `"AMBBA"`, el error dice `¿Quisiste decir 'AMBA'?` y lista los valores disponibles. Con `strict=False` los valores inexistentes se ignoran en lugar de dar error.
+
+!!! warning "Los prompts cambian de un reporte a otro"
+    Cada reporte tiene los prompts que definió su autor, y pueden cambiar. Por eso `report_prompts` es el primer paso. Los prompts de tipo `VALUE` (un número, un texto o una fecha) reciben un solo valor y están probados. Para `ELEMENTS`, `OBJECTS` y `EXPRESSION`, el valor se envía tal cual a la API, así que tenés que pasar la estructura que espera MicroStrategy; esos tipos todavía no están verificados.
+
+!!! note "Dos filtros, cada uno en su lugar"
+    El **prompt** es el filtro dinámico del reporte y lo aplica MicroStrategy antes de descargar: es el único filtro que se hace del lado del servidor. `filters` y `exclude` se aplican siempre sobre el reporte **ya descargado**, así que no reducen lo que se descarga. Si necesitás bajar menos datos, hace falta un prompt (o pedirle al autor del reporte que agregue uno).
+
+    Se probó filtrar del lado del servidor con `Report.apply_filters` del SDK y se descartó: en reportes con prompts MicroStrategy lo ignora sin avisar, no funciona con atributos que tienen varias formas (código y descripción), y resolver los nombres de los elementos ejecuta el reporte, que en uno grande puede colgarse.
+
+## Descargar varios períodos
+
+Abrí una sola conexión y llamá a `report_to_df` una vez por período; después unís los resultados:
+
+```python
+import pandas as pd
+
+with mstr_session() as conn:
+    dfs = [report_to_df(conn, "ID_REPORTE", prompts={"Valor de Periodo": p}) for p in periodos]
+historico = pd.concat(dfs, ignore_index=True)
+```
+
+Con el reporte de ejemplo (farmacia, unas 1.150 filas por período), cada ejecución tardó entre 7 y 9 segundos, casi todo en la consulta de MicroStrategy. Así que 4 períodos tardaron unos 33 segundos en secuencia. Lo que se probó para ir más rápido:
+
+| Forma | Tiempo (4 períodos) | Resultado |
+|---|---|---|
+| Secuencial, un `Report` nuevo por período (lo que hace `report_to_df`) | 33 s | Correcto |
+| Paralelo, 4 hilos con una conexión compartida | 12 s | Mismos resultados que en secuencia |
+| Reutilizar un solo objeto `Report` con distintos prompts | — | **Falla** desde el segundo período |
+
+!!! warning "No reutilices el objeto `Report` del SDK"
+    El objeto conserva el estado de la ejecución anterior y la segunda llamada falla (`No opened prompts need to be answered`). `report_to_df` ya crea uno nuevo en cada llamada; por eso conviene usarla en lugar de armar el loop con `Report` a mano.
+
+Los hilos aceleran, pero cada uno es una consulta más sobre el servidor: usá 2 a 4, no más. Funcionó en la prueba, pero el SDK no garantiza que una conexión se pueda compartir entre hilos, así que probalo con tus datos antes de automatizarlo. El script completo está en `examples/reporte_con_prompts.py`.
+
+Para bajar menos, antes que paralelizar:
+- **No vuelvas a descargar los períodos cerrados.** Guardá el histórico (en una hoja con `mode="append"`, o en un cubo con `policy="upsert"`) y bajá solo el período actual.
+- **Pedile al autor del reporte un prompt que acepte varios períodos o un rango.** Una sola consulta que trae todo suele ser más barata que N consultas.
+- **Si lo necesitás seguido, volcalo a un cubo** y leé de ahí: leer un cubo es mucho más rápido que ejecutar el reporte.
+
 ## Usar el SDK directamente
 
 La librería no cubre todo el SDK a propósito. Cuando necesites algo que no está, pedí la conexión y usá mstrio-py como siempre:

@@ -14,14 +14,17 @@ def report_to_sheet(
     worksheet: str,
     mode: str = "replace",
     transform: Callable[[pd.DataFrame], pd.DataFrame] | None = None,
+    **report_options,
 ) -> int:
     """Reporte de MicroStrategy -> (transformación opcional) -> hoja de Google.
 
     `transform` recibe el DataFrame del reporte y devuelve el que se sube.
-    `mode` es "replace" o "append" (ver `df_to_sheet`). Devuelve las filas escritas.
+    `mode` es "replace" o "append" (ver `df_to_sheet`). Los demás parámetros (`prompts`,
+    `filters`, `exclude`, `strict`, `limit`...) van a `report_to_df`. Devuelve las
+    filas escritas.
     """
     with mstr_session() as conn:
-        df = report_to_df(conn, report_id)
+        df = report_to_df(conn, report_id, **report_options)
     if transform:
         df = transform(df)
     return df_to_sheet(get_sheets_client(), sheet_id, worksheet, df, mode=mode)
