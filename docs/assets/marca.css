@@ -38,6 +38,9 @@
 /* Tablas de referencia: la tabla de variables no se parte en pantallas chicas */
 .md-typeset__scrollwrap { overflow-x: auto; }
 
+/* Portada: el título de la marca ocupa el ancho del texto y no hereda los márgenes del h1 */
+.md-typeset h1 img.portada { display: block; width: 100%; height: auto; margin: 0 0 1.5rem; border-radius: 8px; }
+
 /* Foco visible con teclado */
 .md-typeset a:focus-visible,
 .md-nav__link:focus-visible,

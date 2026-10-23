@@ -2,7 +2,7 @@
 
 import pytest
 
-from sm_connectors import ConfigError, get_env
+from smpy.config import ConfigError, get_env
 
 
 def test_get_env_required_missing(monkeypatch):
@@ -16,9 +16,17 @@ def test_get_env_default(monkeypatch):
     assert get_env("NO_EXISTE", "x") == "x"
 
 
+def test_el_paquete_raiz_no_reexporta_funciones():
+    """Cada función se importa desde su módulo, para ver siempre de dónde viene."""
+    import smpy
+
+    publicos = {n for n in dir(smpy) if not n.startswith("_")}
+    assert publicos <= {"config", "connectors", "transforms"}, publicos
+
+
 @pytest.mark.live
 def test_mstr_connection():
-    from sm_connectors.mstr import mstr_session
+    from smpy.connectors.mstr import mstr_session
 
     with mstr_session() as conn:
         assert conn.status()
@@ -26,6 +34,6 @@ def test_mstr_connection():
 
 @pytest.mark.live
 def test_google_credentials():
-    from sm_connectors.google import get_google_credentials
+    from smpy.connectors.google import get_google_credentials
 
     assert get_google_credentials() is not None

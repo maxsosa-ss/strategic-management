@@ -1,15 +1,23 @@
 ---
-name: sm-connectors
-description: Usar al iniciar o modificar cualquier proyecto que necesite conectarse a MicroStrategy o Google (Sheets/Drive). Indica cómo usar la librería sm_connectors en vez de reescribir la conexión.
+name: smpy
+description: Usar al iniciar o modificar cualquier proyecto que necesite conectarse a MicroStrategy o Google (Sheets/Drive). Indica cómo usar la librería smpy en vez de reescribir la conexión.
 ---
 
-# sm-connectors
+# smpy
 
-Librería local (`src/sm_connectors`) con las conexiones comunes. **No reimplementar** autenticación ni conexión en cada proyecto: importarla.
+Librería `smpy` con las conexiones comunes. **No reimplementar** autenticación ni conexión en cada proyecto: importarla.
 
 ## Instalación en un proyecto nuevo
 
-    pip install -e <ruta>/strategic-management[all]   # o [mstr] / [google]
+Siempre desde GitHub, dentro del entorno virtual del proyecto:
+
+    pip install "smpy[all] @ git+https://github.com/maxsosa-ss/strategic-management.git"   # o [mstr] / [google]
+
+**Nunca instalar con `pip install smpy` a secas**: en PyPI existe otro paquete con ese nombre (un front-end de SurveyMan, sin relación) y pip lo descargaría sin avisar. Comprobar con `pip show smpy` que la versión es `0.x` y no `1.0.3`.
+
+Para fijar una versión, agregar `@vX.Y.Z` (una etiqueta existente) al final de la URL. Si el repositorio es privado, git debe estar autenticado.
+
+Paquetes: `smpy.connectors` (mstr, google, pipeline) y `smpy.transforms` (conversión y limpieza de datos sin conexiones; por ahora vacío).
 
 Copiar `.env.example` a `.env` y completar. Nunca commitear `.env` ni JSON de credenciales.
 
@@ -17,7 +25,7 @@ Copiar `.env.example` a `.env` y completar. Nunca commitear `.env` ni JSON de cr
 
 MicroStrategy (devuelve la `Connection` oficial de mstrio-py; usar el SDK directo para todo lo demás):
 
-    from sm_connectors.mstr import mstr_session
+    from smpy.connectors.mstr import mstr_session
     from mstrio.project_objects import Report
 
     with mstr_session() as conn:
@@ -25,21 +33,27 @@ MicroStrategy (devuelve la `Connection` oficial de mstrio-py; usar el SDK direct
 
 Google:
 
-    from sm_connectors import get_sheets_client
+    from smpy.connectors.google import get_sheets_client
     gc = get_sheets_client()
     ws = gc.open_by_key("SHEET_ID").worksheet("Hoja1")
 
-    from sm_connectors.google import get_google_service
+    from smpy.connectors.google import get_google_service
     drive = get_google_service("drive", "v3")
 
 Reporte -> transformación -> Sheet (`mode` = `"replace"` borra y reescribe, `"append"` agrega al final y exige las mismas columnas):
 
-    from sm_connectors.pipeline import report_to_sheet
+    from smpy.connectors.pipeline import report_to_sheet
     report_to_sheet(REPORT_ID, SHEET_ID, "Hoja1", mode="append", transform=mi_funcion)
 
-DataFrame -> super cube (alimenta tableros). `policy` = `replace` | `add` | `update` | `upsert`:
+Las tres rutas principales: DataFrame a hoja `df_to_sheet`, hoja a cubo `sheet_to_supercube`, DataFrame a cubo `dataframe_to_supercube` (todas en `smpy.connectors.pipeline` salvo `df_to_sheet`, que está en `smpy.connectors.google`).
 
-    from sm_connectors.mstr import mstr_session, create_supercube, df_to_supercube
+    from smpy.connectors.pipeline import dataframe_to_supercube
+    cube_id = dataframe_to_supercube(df, "Tabla", cube_name="Mi_cubo", to_attribute=["Periodo"])  # crea; guardar el ID
+    dataframe_to_supercube(df, "Tabla", cube_id=cube_id, policy="upsert")                         # actualiza
+
+Con más control, DataFrame -> super cube (alimenta tableros). `policy` = `replace` | `add` | `update` | `upsert`:
+
+    from smpy.connectors.mstr import mstr_session, create_supercube, df_to_supercube
     with mstr_session() as conn:
         # carpeta: folder_id=... > MSTR_FOLDER_ID del .env > "My Reports"
         cube = create_supercube(conn, "Mi_cubo", "TablaLogica", df)       # una vez; guardar cube.id
@@ -51,7 +65,7 @@ DataFrame -> super cube (alimenta tableros). `policy` = `replace` | `add` | `upd
 - Un cubo creado desde la interfaz web importando un Google Sheet queda **conectado al Sheet**: subirle DataFrames por API no cambia sus datos. Se actualiza con `SuperCube(conn, id=...).refresh()` (asíncrono). Para cubos que se alimentan desde Python, crearlos con `create_supercube`.
 - Los `OlapCube` se actualizan con `refresh()`/`publish()` (asíncrono, devuelve un `Job`); los super cube solo se pueden publicar una vez, después se usa `update`.
 - Si una hoja de Google Sheets tiene una "tabla" definida, `append_rows` de gspread pisa filas porque la tabla no crece. `df_to_sheet` ya lo evita calculando la próxima fila.
-- Las rutas relativas del `.env` (por ejemplo `credentials.json`) se resuelven desde el directorio de trabajo: ejecutar desde la raíz del proyecto.
+- El `.env` se busca desde la carpeta de trabajo hacia arriba (cada proyecto usa el suyo). Las rutas relativas del `.env` (por ejemplo `credentials.json`) también se resuelven desde la carpeta de trabajo: ejecutar desde la raíz del proyecto o usar rutas absolutas.
 
 ## Reglas
 

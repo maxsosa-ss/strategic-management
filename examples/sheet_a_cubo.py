@@ -3,7 +3,7 @@
 Ejecutar desde la raíz del proyecto (el .env se lee desde ahí). Completá los IDs.
 """
 
-from sm_connectors.pipeline import sheet_to_supercube
+from smpy.connectors.pipeline import sheet_to_supercube
 
 SHEET_ID = "ID_DEL_SHEET"
 PESTANA = "Hoja 1"

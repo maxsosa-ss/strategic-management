@@ -5,7 +5,7 @@ Ejecutar desde la raíz del proyecto (el .env se lee desde ahí).
 
 import pandas as pd
 
-from sm_connectors.mstr import create_supercube, df_to_supercube, mstr_session
+from smpy.connectors.mstr import create_supercube, df_to_supercube, mstr_session
 
 TABLA = "Paises"
 

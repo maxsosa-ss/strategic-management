@@ -1,30 +1,47 @@
-# sm-connectors
+<h1 align="center"><img src="docs/assets/smpy.svg" alt="smpy" width="720"></h1>
 
 Conexiones a MicroStrategy y Google listas para usar, para no reescribirlas en cada proyecto. La librería envuelve los SDK oficiales ([mstrio-py](https://github.com/MicroStrategy/mstrio-py), [gspread](https://github.com/burnash/gspread), google-auth) y suma solo lo que se repite: credenciales, conexión y los flujos que mueven DataFrames entre un sistema y otro.
 
-![Dos flujos: de un reporte de MicroStrategy a una hoja de Google, y de una hoja de Google a un super cube](docs/assets/flujo.svg)
-
 Cuando el SDK de MicroStrategy agrega algo nuevo, ya lo tenés: la conexión que devuelve la librería es la `Connection` oficial, sin capas en el medio.
+
+## Estructura
+
+| Paquete | Para qué sirve |
+|---|---|
+| `smpy.connectors` | Conexiones a MicroStrategy y Google, y los flujos que mueven DataFrames entre reportes, hojas y cubos |
+| `smpy.transforms` | Funciones de conversión y limpieza de datos que no dependen de ninguna conexión. Por ahora está vacío |
+| `smpy.config` | Lectura de la configuración desde el `.env` y las variables de entorno |
+
+Cada función se importa desde el módulo donde está definida; `smpy` no reexporta nada. Así siempre se ve de dónde viene: `from smpy.connectors.google import get_sheets_client`, `from smpy.connectors.mstr import mstr_session`, `from smpy.connectors.pipeline import dataframe_to_supercube`.
 
 <!-- --8<-- [start:instalacion] -->
 ## Instalación
 
 Requiere Python 3.10 o superior.
 
+La librería se instala siempre desde GitHub, dentro del entorno virtual del proyecto que la usa:
+
 ```bash
-cd strategic-management
 python -m venv .venv
 .venv\Scripts\activate
-pip install -e ".[all]"
+pip install "smpy[all] @ git+https://github.com/maxsosa-ss/strategic-management.git"
 ```
 
-Para usar la librería desde otro proyecto, instalala en el entorno de ese proyecto con `pip install -e <ruta>/strategic-management[all]`. Si solo necesitás una parte, instalá `[mstr]` o `[google]` en lugar de `[all]`.
+> **Importante: instalá siempre con la URL de GitHub y nunca con `pip install smpy` a secas.** En PyPI ya existe otro paquete con el nombre `smpy` (un front-end de Python para el lenguaje de encuestas SurveyMan, sin mantenimiento desde 2015). Sin la URL, pip descarga ese paquete en lugar de este y no muestra ningún error.
+
+Para comprobar que instalaste el correcto, ejecutá `pip show smpy`: tiene que figurar la versión `0.x` de esta librería y no la `1.0.3` del paquete de encuestas. Si instalaste el equivocado, corré `pip uninstall smpy` y volvé a instalar con el comando de arriba.
+
+Si solo necesitás una parte, reemplazá `[all]` por `[mstr]` o `[google]`. Para actualizar a la última versión, agregá `--upgrade`.
+
+Para fijar una versión concreta, agregá una etiqueta al final de la URL, por ejemplo `...strategic-management.git@v0.2.0`. Las etiquetas disponibles están en la sección Releases del repositorio.
+
+Si el repositorio es privado, git tiene que estar autenticado con tu cuenta de GitHub antes de instalar (por ejemplo con `gh auth login`, un token personal o una clave SSH).
 <!-- --8<-- [end:instalacion] -->
 
 <!-- --8<-- [start:configuracion] -->
 ## Configuración
 
-Copiá `.env.example` a `.env` en la raíz del proyecto desde el que ejecutás tus scripts y completalo. Las rutas relativas, como `credentials.json`, se resuelven desde el directorio de trabajo.
+Copiá `.env.example` a `.env` en la raíz del proyecto desde el que ejecutás tus scripts y completalo. La librería busca el `.env` desde la carpeta de trabajo hacia arriba, así que cada proyecto usa el suyo, y una variable de entorno del sistema tiene prioridad sobre el archivo. Las rutas relativas, como `credentials.json`, también se resuelven desde la carpeta de trabajo; si ejecutás scripts desde otro lugar (por ejemplo con el Programador de tareas), usá rutas absolutas.
 
 | Variable | Obligatoria | Qué es |
 |---|---|---|
@@ -44,12 +61,14 @@ Para que la librería escriba en un Google Sheet con una service account, compar
 El `.env` y los JSON de credenciales están en `.gitignore`. No los subas al repositorio.
 <!-- --8<-- [end:configuracion] -->
 
+<img src="docs/assets/franja.svg" alt="" width="100%" height="6">
+
 ## Uso
 
 Llevar el resultado de un reporte a una hoja, agregando filas al final y transformando antes de subir:
 
 ```python
-from sm_connectors.pipeline import report_to_sheet
+from smpy.connectors.pipeline import report_to_sheet
 
 report_to_sheet("ID_REPORTE", "ID_SHEET", "Historico", mode="append", transform=mi_funcion)
 ```
@@ -57,16 +76,25 @@ report_to_sheet("ID_REPORTE", "ID_SHEET", "Historico", mode="append", transform=
 Crear un super cube desde una hoja y después mantenerlo actualizado:
 
 ```python
-from sm_connectors.pipeline import sheet_to_supercube
+from smpy.connectors.pipeline import sheet_to_supercube
 
 cube_id = sheet_to_supercube("ID_SHEET", "Hoja 1", "Paises", cube_name="Paises")  # guardá cube_id
 sheet_to_supercube("ID_SHEET", "Hoja 1", "Paises", cube_id=cube_id, policy="replace")
 ```
 
+Subir un DataFrame propio a un cubo, sin pasar por una hoja:
+
+```python
+from smpy.connectors.pipeline import dataframe_to_supercube
+
+cube_id = dataframe_to_supercube(df, "Paises", cube_name="Paises", to_attribute=["Periodo"])
+dataframe_to_supercube(df, "Paises", cube_id=cube_id, policy="upsert")
+```
+
 Usar el SDK de MicroStrategy directamente cuando la librería no tiene lo que necesitás:
 
 ```python
-from sm_connectors.mstr import mstr_session
+from smpy.connectors.mstr import mstr_session
 from mstrio.project_objects import Report
 
 with mstr_session() as conn:      # cierra la sesión al salir
@@ -79,19 +107,26 @@ Hay más ejemplos listos para ejecutar en [examples/](examples/) y recetas expli
 
 | Quiero | Función | Módulo |
 |---|---|---|
-| Conectarme a MicroStrategy | `get_mstr_connection`, `mstr_session` | `mstr` |
-| Traer un reporte como DataFrame | `report_to_df` | `mstr` |
-| Crear un super cube desde un DataFrame | `create_supercube` | `mstr` |
-| Actualizar un super cube (`replace`, `add`, `update`, `upsert`) | `df_to_supercube` | `mstr` |
-| Obtener credenciales o clientes de Google | `get_google_credentials`, `get_sheets_client`, `get_google_service` | `google` |
-| Leer una pestaña como DataFrame | `sheet_to_df` | `google` |
-| Escribir un DataFrame en una pestaña (`replace` o `append`) | `df_to_sheet` | `google` |
-| Reporte a hoja, con transformación opcional | `report_to_sheet` | `pipeline` |
-| Hoja a super cube, con transformación opcional | `sheet_to_supercube` | `pipeline` |
+| Conectarme a MicroStrategy | `get_mstr_connection`, `mstr_session` | `smpy.connectors.mstr` |
+| Traer un reporte como DataFrame | `report_to_df` | `smpy.connectors.mstr` |
+| Crear un super cube desde un DataFrame | `create_supercube` | `smpy.connectors.mstr` |
+| Actualizar un super cube (`replace`, `add`, `update`, `upsert`) | `df_to_supercube` | `smpy.connectors.mstr` |
+| Obtener credenciales o clientes de Google | `get_google_credentials`, `get_sheets_client`, `get_google_service` | `smpy.connectors.google` |
+| Leer una pestaña como DataFrame | `sheet_to_df` | `smpy.connectors.google` |
+| Escribir un DataFrame en una pestaña (`replace` o `append`) | `df_to_sheet` | `smpy.connectors.google` |
+| Reporte a hoja, con transformación opcional | `report_to_sheet` | `smpy.connectors.pipeline` |
+| Hoja a super cube, con transformación opcional | `sheet_to_supercube` | `smpy.connectors.pipeline` |
+| DataFrame a super cube, creando o actualizando, en una sola llamada | `dataframe_to_supercube` | `smpy.connectors.pipeline` |
+
+Las tres rutas que más se usan quedan así: DataFrame a hoja con `df_to_sheet`, hoja a cubo con `sheet_to_supercube` y DataFrame a cubo con `dataframe_to_supercube`.
 
 La referencia completa, con parámetros y comportamiento de cada función, está en la documentación.
 
+<img src="docs/assets/franja.svg" alt="" width="100%" height="6">
+
 ## Documentación
+
+Para ver el sitio de documentación necesitás una copia del repositorio (`git clone`), porque los archivos de `docs/` no se instalan con `pip`. Desde la carpeta clonada:
 
 ```bash
 pip install -e ".[docs]"
@@ -111,4 +146,4 @@ Corré `pytest -m live` después de actualizar `mstrio-py` o `gspread`. La versi
 
 ## Skills
 
-La carpeta [skills/](skills/) contiene los skills asociados al repositorio. Son archivos `SKILL.md` en texto plano, así que sirven con cualquier asistente de IA que los soporte. `sm-connectors` le indica al asistente que use esta librería al iniciar un proyecto, en lugar de reescribir las conexiones.
+La carpeta [skills/](skills/) contiene los skills asociados al repositorio. Son archivos `SKILL.md` en texto plano, así que sirven con cualquier asistente de IA que los soporte. `smpy` le indica al asistente que use esta librería al iniciar un proyecto, en lugar de reescribir las conexiones.

@@ -1,10 +1,10 @@
-# sm-connectors
+<h1><img src="assets/smpy.svg" alt="smpy" class="portada"></h1>
 
-Conexiones a MicroStrategy y Google listas para usar, para no reescribirlas en cada proyecto.
+Conexiones a MicroStrategy y Google listas para usar, para no reescribirlas en cada proyecto, más un lugar para las funciones de conversión de datos que no dependen de ninguna conexión.
 
-La librería envuelve los SDK oficiales (mstrio-py, gspread y google-auth) y suma solo lo que se repite en los proyectos: credenciales, conexión y los flujos que mueven DataFrames entre un sistema y otro.
+La librería se organiza en `smpy.connectors` (conexiones y flujos) y `smpy.transforms` (conversión y limpieza de datos, por ahora vacío).
 
-![Dos flujos: de un reporte de MicroStrategy a una hoja de Google, y de una hoja de Google a un super cube](assets/flujo.svg)
+La parte de conexiones envuelve los SDK oficiales (mstrio-py, gspread y google-auth) y suma solo lo que se repite en los proyectos: credenciales, conexión y los flujos que mueven DataFrames entre un sistema y otro.
 
 La conexión que devuelve la librería es la `Connection` oficial de mstrio-py, sin capas en el medio. Cuando el SDK agrega una función nueva, ya podés usarla.
 

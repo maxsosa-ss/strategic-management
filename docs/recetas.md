@@ -30,7 +30,21 @@ El cubo se crea en la carpeta que indiques con `folder_id`. Si no lo pasás, usa
 
 ## Alimentar un cubo con un DataFrame propio
 
-Sirve cuando los datos vienen de un CSV, una API o un cálculo. Las columnas de texto y fecha son atributos y funcionan como la clave de cada fila; las numéricas son métricas y son lo que `update` y `upsert` modifican.
+Sirve cuando los datos vienen de un CSV, una API o un cálculo, o cuando armás el DataFrame uniendo varias fuentes. `dataframe_to_supercube` lo crea o lo actualiza en una sola llamada:
+
+```python
+from smpy.connectors.pipeline import dataframe_to_supercube
+
+cube_id = dataframe_to_supercube(df, "Tabla", cube_name="Mi cubo", to_attribute=["Periodo"])  # crea
+dataframe_to_supercube(df, "Tabla", cube_id=cube_id, policy="upsert")                         # actualiza
+```
+
+Para subir varios cubos seguidos con una sola conexión, abrí la sesión vos y pasala con `conn=`.
+
+!!! tip "Los períodos numéricos"
+    Una columna como `Periodo` (202510) llega como número y el cubo la trata como métrica. Si querés que sea un atributo, indicá `to_attribute=["Periodo"]`.
+
+Las columnas de texto y fecha son atributos y funcionan como la clave de cada fila; las numéricas son métricas y son lo que `update` y `upsert` modifican. Este script muestra las cuatro políticas con las funciones de más bajo nivel:
 
 ```python
 --8<-- "examples/dataframe_a_cubo.py"
@@ -61,8 +75,8 @@ Escribí la transformación como una función de DataFrame a DataFrame, sin cone
 Si necesitás controlar cada paso por separado, por ejemplo para reintentar solo la subida, usá las funciones sueltas:
 
 ```python
-from sm_connectors.google import df_to_sheet, get_sheets_client
-from sm_connectors.mstr import mstr_session, report_to_df
+from smpy.connectors.google import df_to_sheet, get_sheets_client
+from smpy.connectors.mstr import mstr_session, report_to_df
 
 with mstr_session() as conn:
     df = report_to_df(conn, "ID_REPORTE")
@@ -75,7 +89,7 @@ df_to_sheet(get_sheets_client(), "ID_SHEET", "Hoja 1", df, mode="replace")
 La librería no cubre todo el SDK a propósito. Cuando necesites algo que no está, pedí la conexión y usá mstrio-py como siempre:
 
 ```python
-from sm_connectors.mstr import mstr_session
+from smpy.connectors.mstr import mstr_session
 from mstrio.project_objects import Report
 
 with mstr_session() as conn:

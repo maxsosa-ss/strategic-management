@@ -2,9 +2,11 @@
 
 import os
 
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 
-load_dotenv()
+# usecwd=True busca el .env desde la carpeta de trabajo hacia arriba (el del proyecto que usa la
+# librería). Sin esto, python-dotenv parte de la carpeta de este archivo y lee el .env de la librería.
+load_dotenv(find_dotenv(usecwd=True))
 
 
 class ConfigError(RuntimeError):

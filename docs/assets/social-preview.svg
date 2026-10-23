@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" role="img" aria-labelledby="t">
+  <title id="t">SMPY: conexiones a MicroStrategy y Google, y herramientas de datos</title>
+  <rect width="1280" height="640" fill="#278976"/>
+  <g transform="translate(107 150) scale(2.4)">
+    <path d="M80 10 H10 V50 H70 V90 H0" fill="none" stroke="#ACF9EA" stroke-width="20" stroke-linejoin="miter"/>
+    <g transform="translate(108 0)">
+      <polygon fill="#42E2C6" points="0,100 0,0 24,0 50,46 76,0 100,0 100,100 80,100 80,36 56,78 44,78 20,36 20,100"/>
+    </g>
+    <g transform="translate(236 0)">
+      <path d="M10 100 V10 H70 V50 H10" fill="none" stroke="#ACF9EA" stroke-width="20" stroke-linejoin="miter"/>
+    </g>
+    <g transform="translate(344 0)">
+      <polygon fill="#42E2C6" points="0,0 24,0 50,40 76,0 100,0 60,56 60,100 40,100 40,56"/>
+    </g>
+  </g>
+  <text x="640" y="470" text-anchor="middle" fill="#F9FAFA" font-family="Inter, Roboto, Arial, Helvetica, sans-serif" font-size="40">Conexiones a MicroStrategy y Google,</text>
+  <text x="640" y="524" text-anchor="middle" fill="#F9FAFA" font-family="Inter, Roboto, Arial, Helvetica, sans-serif" font-size="40">y herramientas de datos</text>
+  <rect y="616" width="640" height="24" fill="#42E2C6"/>
+  <rect x="640" y="616" width="384" height="24" fill="#ACF9EA"/>
+  <rect x="1024" y="616" width="256" height="24" fill="#F9FAFA"/>
+</svg>

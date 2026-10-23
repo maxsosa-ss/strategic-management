@@ -5,7 +5,7 @@ Ejecutar desde la raíz del proyecto (el .env se lee desde ahí). Completá los 
 
 import pandas as pd
 
-from sm_connectors.pipeline import report_to_sheet
+from smpy.connectors.pipeline import report_to_sheet
 
 REPORT_ID = "ID_DEL_REPORTE"
 SHEET_ID = "ID_DEL_SHEET"

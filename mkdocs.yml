@@ -1,11 +1,13 @@
-site_name: sm-connectors
-site_description: Conexiones reutilizables a MicroStrategy y Google
+site_name: smpy
+site_description: Conexiones a MicroStrategy y Google, y herramientas de datos reutilizables
 docs_dir: docs
 strict: true
 
 theme:
   name: material
   language: es
+  favicon: assets/favicon.svg
+  logo: assets/favicon.svg
   font:
     text: Inter
     code: false

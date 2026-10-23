@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from sm_connectors.google import df_to_sheet, df_to_values
+from smpy.connectors.google import df_to_sheet, df_to_values
 
 
 class FakeWorksheet:
@@ -104,14 +104,14 @@ class FakeReadWS:
 
 
 def test_sheet_to_df():
-    from sm_connectors.google import sheet_to_df
+    from smpy.connectors.google import sheet_to_df
 
     out = sheet_to_df(FakeGC(FakeReadWS([{"a": 1, "b": "x"}, {"a": 2, "b": ""}])), "id", "H")
     assert list(out.columns) == ["a", "b"] and out["a"].tolist() == [1, 2]
 
 
 def test_sheet_to_df_empty_raises():
-    from sm_connectors.google import sheet_to_df
+    from smpy.connectors.google import sheet_to_df
 
     with pytest.raises(ValueError, match="no tiene filas"):
         sheet_to_df(FakeGC(FakeReadWS([])), "id", "H")

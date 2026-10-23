@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from .config import ConfigError, get_env
+from ..config import ConfigError, get_env
 
 DEFAULT_SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",

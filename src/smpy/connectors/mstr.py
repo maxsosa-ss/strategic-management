@@ -8,7 +8,7 @@ from mstrio.connection import Connection
 from mstrio.project_objects import Report
 from mstrio.project_objects.datasets import SuperCube
 
-from .config import get_env
+from ..config import get_env
 
 
 def get_mstr_connection(
