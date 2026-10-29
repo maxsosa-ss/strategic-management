@@ -13,9 +13,19 @@ DEFAULT_SCOPES = [
 
 
 def get_google_credentials(scopes: list[str] | None = None, mode: str | None = None):
-    """Devuelve credenciales de google-auth según GOOGLE_AUTH_MODE (service_account | oauth)."""
+    """Devuelve credenciales de google-auth según GOOGLE_AUTH_MODE (service_account | oauth | adc).
+
+    `adc` usa las credenciales del entorno (en Cloud Run, la cuenta de servicio del servicio; en
+    local, las de `gcloud auth application-default login`), sin archivos ni variables.
+    """
     scopes = scopes or DEFAULT_SCOPES
     mode = mode or get_env("GOOGLE_AUTH_MODE", "service_account")
+
+    if mode == "adc":
+        import google.auth
+
+        credentials, _ = google.auth.default(scopes=scopes)
+        return credentials
 
     if mode == "service_account":
         from google.oauth2.service_account import Credentials
@@ -39,7 +49,7 @@ def get_google_credentials(scopes: list[str] | None = None, mode: str | None = N
         token_path.write_text(creds.to_json())
         return creds
 
-    raise ConfigError(f"GOOGLE_AUTH_MODE inválido: {mode!r} (usar 'service_account' u 'oauth')")
+    raise ConfigError(f"GOOGLE_AUTH_MODE inválido: {mode!r} (usar 'service_account', 'oauth' o 'adc')")
 
 
 def get_sheets_client(scopes: list[str] | None = None):
@@ -126,11 +136,14 @@ def df_to_sheet(
 def sheet_to_df(gc, sheet_id: str, worksheet: str, header_row: int = 1) -> pd.DataFrame:
     """Lee una pestaña como DataFrame. La fila `header_row` se usa como encabezado.
 
-    Los números y booleanos llegan tipados; las celdas vacías llegan como "". Lanza
-    ValueError si la pestaña no tiene filas de datos, para no propagar una carga vacía.
+    Los números y booleanos llegan tipados; las celdas vacías llegan como "". Las columnas sin
+    encabezado se ignoran (típicamente notas sueltas al costado de la tabla). Lanza ValueError si
+    la pestaña no tiene filas de datos, para no propagar una carga vacía.
     """
     ws = gc.open_by_key(sheet_id).worksheet(worksheet)
-    df = pd.DataFrame(ws.get_all_records(head=header_row))
+    encabezados = [h for h in ws.row_values(header_row) if h != ""]
+    records = ws.get_all_records(head=header_row, expected_headers=encabezados)
+    df = pd.DataFrame(records).drop(columns="", errors="ignore")
     if df.empty:
         raise ValueError(f"La pestaña {worksheet!r} no tiene filas de datos debajo de la fila {header_row}")
     return df

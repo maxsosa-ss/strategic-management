@@ -11,13 +11,13 @@ Librería `smpy` con las conexiones comunes. **No reimplementar** autenticación
 
 Siempre desde GitHub, dentro del entorno virtual del proyecto:
 
-    pip install "smpy[all] @ git+https://github.com/maxsosa-ss/strategic-management.git"   # o [mstr] / [google]
+    pip install "smpy[all] @ git+https://github.com/maxsosa-ss/strategic-management.git"   # o [mstr] / [google] / [gcs]
 
 **Nunca instalar con `pip install smpy` a secas**: en PyPI existe otro paquete con ese nombre (un front-end de SurveyMan, sin relación) y pip lo descargaría sin avisar. Comprobar con `pip show smpy` que la versión es `0.x` y no `1.0.3`.
 
 Para fijar una versión, agregar `@vX.Y.Z` (una etiqueta existente) al final de la URL. Si el repositorio es privado, git debe estar autenticado.
 
-Paquetes: `smpy.connectors` (mstr, google, pipeline) y `smpy.transforms` (conversión y limpieza de datos sin conexiones; por ahora `filters.filter_values`).
+Paquetes: `smpy.connectors` (mstr, google, gcs, pipeline) y `smpy.transforms` (conversión y limpieza de datos sin conexiones; `filters.filter_values` y `mapping.{amb,int,disc}_rubros_subrubros`).
 
 Copiar `.env.example` a `.env` y completar. Nunca commitear `.env` ni JSON de credenciales.
 

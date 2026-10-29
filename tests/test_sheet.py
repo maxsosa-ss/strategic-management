@@ -96,10 +96,14 @@ def test_append_rejects_different_columns(df):
 
 
 class FakeReadWS:
-    def __init__(self, records):
+    def __init__(self, records, headers=None):
         self.records = records
+        self.headers = headers if headers is not None else (list(records[0]) if records else [])
 
-    def get_all_records(self, head=1):
+    def row_values(self, n):
+        return self.headers
+
+    def get_all_records(self, head=1, expected_headers=None):
         return self.records
 
 
@@ -108,6 +112,15 @@ def test_sheet_to_df():
 
     out = sheet_to_df(FakeGC(FakeReadWS([{"a": 1, "b": "x"}, {"a": 2, "b": ""}])), "id", "H")
     assert list(out.columns) == ["a", "b"] and out["a"].tolist() == [1, 2]
+
+
+def test_sheet_to_df_ignora_columnas_sin_encabezado():
+    from smpy.connectors.google import sheet_to_df
+
+    records = [{"a": 1, "b": "x", "": "nota"}, {"a": 2, "b": "y", "": ""}]
+    ws = FakeReadWS(records, headers=["a", "b", "", "", ""])
+    out = sheet_to_df(FakeGC(ws), "id", "H")
+    assert list(out.columns) == ["a", "b"]
 
 
 def test_sheet_to_df_empty_raises():

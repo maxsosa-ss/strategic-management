@@ -4,7 +4,15 @@ Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) 
 
 ## Sin publicar
 
-Sin cambios todavía.
+## 0.4.0 - 2026-10-29
+
+### Agregado
+- `read_parquet` y `get_storage_client` (`smpy.connectors.gcs`): leen un archivo Parquet de un bucket de Google Cloud Storage como DataFrame. El bucket se pasa por parámetro o con `GCS_BUCKET`. Nuevo extra `[gcs]` (incluido en `[all]`).
+- Modo `adc` en `GOOGLE_AUTH_MODE`: usa las credenciales del entorno (en Cloud Run, la cuenta de servicio del servicio), sin archivos.
+- `amb_rubros_subrubros`, `int_rubros_subrubros` y `disc_rubros_subrubros` (`smpy.transforms.mapping`): agregan `Rubro PPTO` y `Subrubro PPTO` a datos de Ambulatorio, Internaciones y Discapacidad. Reciben las tablas auxiliares ya cargadas y los nombres de las columnas de entrada por parámetro. Si el subrubro falta o no se encuentra se usa el `Subrubro PPTO NAN` del rubro; fallan si una clave del mapeo tiene valores distintos y avisan de los valores sin mapeo.
+
+### Cambiado
+- `sheet_to_df` ignora las columnas sin encabezado (por ejemplo notas sueltas al costado de la tabla) en lugar de fallar por encabezados duplicados.
 
 ## 0.3.0 - 2026-10-23
 

@@ -31,7 +31,7 @@ pip install "smpy[all] @ git+https://github.com/maxsosa-ss/strategic-management.
 
 Para comprobar que instalaste el correcto, ejecutá `pip show smpy`: tiene que figurar la versión `0.x` de esta librería y no la `1.0.3` del paquete de encuestas. Si instalaste el equivocado, corré `pip uninstall smpy` y volvé a instalar con el comando de arriba.
 
-Si solo necesitás una parte, reemplazá `[all]` por `[mstr]` o `[google]`. Para actualizar a la última versión, agregá `--upgrade`.
+Si solo necesitás una parte, reemplazá `[all]` por `[mstr]`, `[google]` o `[gcs]`. Para actualizar a la última versión, agregá `--upgrade`.
 
 Para fijar una versión concreta, agregá una etiqueta al final de la URL, por ejemplo `...strategic-management.git@v0.3.0`. Las etiquetas disponibles están en la sección Releases del repositorio.
 
@@ -51,10 +51,11 @@ Copiá `.env.example` a `.env` en la raíz del proyecto desde el que ejecutás t
 | `MSTR_PROJECT_ID` | Sí | ID del proyecto (32 caracteres). Se usa siempre el ID, nunca el nombre |
 | `MSTR_LOGIN_MODE` | No | `1` estándar (por defecto) o `16` LDAP |
 | `MSTR_FOLDER_ID` | No | Carpeta donde se crean los cubos nuevos. Si falta, van a "My Reports" |
-| `GOOGLE_AUTH_MODE` | No | `service_account` (por defecto) u `oauth` |
+| `GOOGLE_AUTH_MODE` | No | `service_account` (por defecto), `oauth` o `adc` (credenciales del entorno, para Cloud Run) |
 | `GOOGLE_SERVICE_ACCOUNT_FILE` | Con `service_account` | Ruta al JSON de la service account |
 | `GOOGLE_OAUTH_CLIENT_FILE` | Con `oauth` | Ruta al client secret de OAuth |
 | `GOOGLE_OAUTH_TOKEN_FILE` | Con `oauth` | Dónde guardar el token (por defecto `token.json`) |
+| `GCS_BUCKET` | No | Bucket por defecto de `read_parquet` (se puede pasar `bucket=...`) |
 
 Para que la librería escriba en un Google Sheet con una service account, compartí el Sheet con el `client_email` que figura en el JSON.
 
@@ -128,10 +129,12 @@ Hay más ejemplos listos para ejecutar en [examples/](examples/) y recetas expli
 | Obtener credenciales o clientes de Google | `get_google_credentials`, `get_sheets_client`, `get_google_service` | `smpy.connectors.google` |
 | Leer una pestaña como DataFrame | `sheet_to_df` | `smpy.connectors.google` |
 | Escribir un DataFrame en una pestaña (`replace` o `append`) | `df_to_sheet` | `smpy.connectors.google` |
+| Leer un archivo Parquet de un bucket de Cloud Storage | `read_parquet`, `get_storage_client` | `smpy.connectors.gcs` |
 | Reporte a hoja, con transformación opcional | `report_to_sheet` | `smpy.connectors.pipeline` |
 | Hoja a super cube, con transformación opcional | `sheet_to_supercube` | `smpy.connectors.pipeline` |
 | DataFrame a super cube, creando o actualizando, en una sola llamada | `dataframe_to_supercube` | `smpy.connectors.pipeline` |
 | Filtrar un DataFrame por valores de columnas, con validación | `filter_values` | `smpy.transforms.filters` |
+| Mapear rubros y subrubros PPTO (Ambulatorio, Internaciones, Discapacidad) | `amb_rubros_subrubros`, `int_rubros_subrubros`, `disc_rubros_subrubros` | `smpy.transforms.mapping` |
 
 Las tres rutas que más se usan quedan así: DataFrame a hoja con `df_to_sheet`, hoja a cubo con `sheet_to_supercube` y DataFrame a cubo con `dataframe_to_supercube`.
 

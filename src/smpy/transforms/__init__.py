@@ -5,4 +5,6 @@ se pueden probar con datos de ejemplo. Se agregan funciones cuando una transform
 dos o más proyectos.
 
 - `smpy.transforms.filters`: filtrado por valores de columnas, con validación.
+- `smpy.transforms.mapping`: mapeo de rubros y subrubros (Ambulatorio, Internaciones, Discapacidad)
+  con tablas auxiliares ya cargadas.
 """
